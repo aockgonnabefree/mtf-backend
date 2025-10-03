@@ -94,7 +94,7 @@ CREATE TABLE AGENT (
 );
 
 CREATE TABLE DOCUMENT (
-    Id varchar(13) PRIMARY KEY,
+    Id varchar(36) PRIMARY KEY,
     Type document_type NOT NULL,
     Expiry_date date NOT NULL,
 
