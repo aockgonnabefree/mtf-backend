@@ -38,34 +38,34 @@ CREATE TYPE bill_status AS enum (
 );
 
 CREATE TABLE ADDRESS (
-    Id varchar(13) PRIMARY KEY,
-    Address_detail_th varchar(255)  NOT NULL,
-    District_th varchar(255) NOT NULL,
-    Sub_district_th varchar(255) NOT NULL,
-    Province_th varchar(255) NOT NULL,
-    Postal_code varchar(5) NOT NULL,
-
-    Address_detail_en varchar(255),
-    District_en varchar(255),
-    Sub_district_en varchar(255),
-    Province_en varchar(255)
+    Id VARCHAR(36) PRIMARY KEY,
+    Addr_detail_th TEXT NOT NULL,
+    Sub_district_th VARCHAR(255) NOT NULL,
+    District_th VARCHAR(255) NOT NULL,
+    Province_th VARCHAR(255) NOT NULL,
+    Addr_detail_en TEXT,
+    Sub_district_en VARCHAR(255),
+    District_en VARCHAR(255),
+    Province_en VARCHAR(255),
+    Postal_code VARCHAR(5) NOT NULL
 );
 
 CREATE TABLE EMPLOYER (
-    Id varchar(13) PRIMARY KEY,
-    Firstname varchar(255) NOT NULL,
-    Lastname varchar(255) NOT NULL,
-    Business_type varchar(255) NOT NULL,
-    Financial_status_year int NOT NULL,
-    Financial_status_income int NOT NULL,
-    Financial_status_tax int NOT NULL,
-    Current_income int NOT NULL,
-    Income_duration int NOT NULL,
+    Id VARCHAR(13) PRIMARY KEY,
+    Firstname VARCHAR(255) NOT NULL,
+    Lastname VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) NOT NULL UNIQUE,
+    Phone_number VARCHAR(20) NOT NULL UNIQUE,
+    Business_type VARCHAR(255) NOT NULL,
+    Financial_status_year INT NOT NULL,
+    Financial_status_income NUMERIC(15, 2) NOT NULL,
+    Financial_status_tax NUMERIC(15, 2) NOT NULL,
+    Current_income NUMERIC(15, 2) NOT NULL,
+    Income_duration INT NOT NULL,
     Status active_status_type NOT NULL,
+    Company_name VARCHAR(255),
 
-    Company_name varchar(255),
-
-    Address_id varchar(13) NOT NULL,
+    Address_id VARCHAR(36) NOT NULL,
     CONSTRAINT fk_address_id FOREIGN KEY (Address_id) REFERENCES ADDRESS (Id) ON DELETE CASCADE
 );
 
@@ -77,7 +77,7 @@ CREATE TABLE EMPLOYEE (
     Blood_type blood_type NOT NULL,
     Status active_status_type NOT NULL,
 
-    Address_id varchar(13) NOT NULL,
+    Address_id varchar(36) NOT NULL,
     CONSTRAINT fk_address_id FOREIGN KEY (Address_id) REFERENCES ADDRESS (Id) ON DELETE CASCADE
 );
 
@@ -89,7 +89,7 @@ CREATE TABLE AGENT (
     Hashed_password varchar(255) NOT NULL,
     Status active_status_type NOT NULL,
 
-    Address_id varchar(13) NOT NULL,
+    Address_id varchar(36) NOT NULL,
     CONSTRAINT fk_address_id FOREIGN KEY (Address_id) REFERENCES ADDRESS (Id) ON DELETE CASCADE
 );
 
