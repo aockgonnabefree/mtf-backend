@@ -2,7 +2,9 @@ package ku.cs.mtf_backend.controller;
 
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
+import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
 import ku.cs.mtf_backend.entity.Employer;
+import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.EmployerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,6 +35,26 @@ public class EmployerController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             // Return 409 Conflict status if there is a duplicate entry
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{employerId}")
+    public ResponseEntity<?> updateEmployer(
+            @PathVariable String employerId,
+            @Valid @RequestBody UpdateEmployerPayload payload) {
+        try {
+            Employer updatedEmployer = employerService.updateEmployer(employerId, payload);
+            Map<String, Object> response = Map.of(
+                    "message", "Employer updated successfully.",
+                    "employerId", updatedEmployer.getId()
+            );
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            // Catches the exception from the service if the employer is not found.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            // Catches the exception for duplicate email/phone on another employer.
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         }
     }

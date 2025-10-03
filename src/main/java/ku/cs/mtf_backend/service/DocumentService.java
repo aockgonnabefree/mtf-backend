@@ -1,6 +1,6 @@
 package ku.cs.mtf_backend.service;
 
-import ku.cs.mtf_backend.dto.request.DocumentPayload;
+import ku.cs.mtf_backend.dto.request.CreateDocumentPayload;
 import ku.cs.mtf_backend.entity.Document;
 import ku.cs.mtf_backend.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class DocumentService {
         this.documentRepository = documentRepository;
     }
 
-    public void createAndSaveDocuments(String employeeId, List<DocumentPayload> documentPayloads) {
+    public void createAndSaveDocuments(String employeeId, List<CreateDocumentPayload> documentPayloads) {
         if (documentPayloads == null || documentPayloads.isEmpty()) {
             return;
         }

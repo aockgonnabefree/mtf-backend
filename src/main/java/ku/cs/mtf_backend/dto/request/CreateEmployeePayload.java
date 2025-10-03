@@ -32,7 +32,7 @@ public class CreateEmployeePayload {
     private String lastName;
 
     @NotBlank(message = "Status is required")
-    @Pattern(regexp = "ACTIVE|INACTIVE", message = "Status must be 'active' or 'inactive'")
+    @Pattern(regexp = "ACTIVE|INACTIVE", message = "Status must be 'ACTIVE' or 'INACTIVE'")
     private String status;
 
     @NotBlank(message = "Nationality is required")
@@ -49,7 +49,7 @@ public class CreateEmployeePayload {
 
     @NotNull(message = "Documents list cannot be null (can be an empty list)")
     @Valid
-    private List<DocumentPayload> documents;
+    private List<CreateDocumentPayload> documents;
 
     public void setPassportNo(String passportNo) {
         this.passportNo = (passportNo == null) ? null : passportNo.strip();

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class JdbcEmployerRepository implements EmployerRepository {
 
@@ -63,6 +65,63 @@ public class JdbcEmployerRepository implements EmployerRepository {
                 .param("status", employer.getStatus())
                 .param("companyName", employer.getCompanyName())
                 .param("addressId", employer.getAddressId())
+                .update();
+        return employer;
+    }
+
+    @Override
+    public Optional<Employer> findById(String id) {
+        String sql = "SELECT * FROM EMPLOYER WHERE Id = :id";
+        return jdbcClient.sql(sql).param("id", id).query(Employer.class).optional();
+    }
+
+    @Override
+    public Optional<Employer> findByEmail(String email) {
+        String sql = "SELECT * FROM EMPLOYER WHERE Email = :email";
+        return jdbcClient.sql(sql).param("email", email).query(Employer.class).optional();
+    }
+
+    @Override
+    public Optional<Employer> findByPhoneNumber(String phoneNumber) {
+        String sql = "SELECT * FROM EMPLOYER WHERE Phone_number = :phoneNumber";
+        return jdbcClient.sql(sql).param("phoneNumber", phoneNumber).query(Employer.class).optional();
+    }
+
+    @Override
+    public Employer update(Employer employer) {
+        String sql = """
+            UPDATE EMPLOYER SET
+                Firstname = :firstname,
+                Lastname = :lastname,
+                Email = :email,
+                Phone_number = :phoneNumber,
+                Business_type = :businessType,
+                Financial_status_year = :fsYear,
+                Financial_status_income = :fsIncome,
+                Financial_status_tax = :fsTax,
+                Current_income = :currentIncome,
+                Income_duration = :incomeDuration,
+                Status = CAST(:status AS active_status_type),
+                Company_name = :companyName,
+                Address_id = :addressId
+            WHERE Id = :id
+            """;
+
+        jdbcClient.sql(sql)
+                .param("firstname", employer.getFirstname())
+                .param("lastname", employer.getLastname())
+                .param("email", employer.getEmail())
+                .param("phoneNumber", employer.getPhoneNumber())
+                .param("businessType", employer.getBusinessType())
+                .param("fsYear", employer.getFinancialStatusYear())
+                .param("fsIncome", employer.getFinancialStatusIncome())
+                .param("fsTax", employer.getFinancialStatusTax())
+                .param("currentIncome", employer.getCurrentIncome())
+                .param("incomeDuration", employer.getIncomeDuration())
+                .param("status", employer.getStatus())
+                .param("companyName", employer.getCompanyName())
+                .param("addressId", employer.getAddressId())
+                .param("id", employer.getId())
                 .update();
         return employer;
     }
