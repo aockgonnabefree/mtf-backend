@@ -1,11 +1,13 @@
 package ku.cs.mtf_backend.repository.jdbc;
 
+import ku.cs.mtf_backend.dto.projection.EmployerSummary;
 import ku.cs.mtf_backend.entity.Employer;
 import ku.cs.mtf_backend.repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -124,5 +126,55 @@ public class JdbcEmployerRepository implements EmployerRepository {
                 .param("id", employer.getId())
                 .update();
         return employer;
+    }
+
+    @Override
+    public long countAll() {
+        String sql = "SELECT COUNT(*) FROM EMPLOYER";
+        Long count = jdbcClient.sql(sql).query(Long.class).single();
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long countByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM EMPLOYER WHERE Status = CAST(:status AS active_status_type)";
+        Long count = jdbcClient.sql(sql).param("status", status).query(Long.class).single();
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public List<EmployerSummary> findAllWithPagination(Integer page, Integer size, String nameFilter, String statusFilter) {
+        String sql = """
+            SELECT
+                e.Id,
+                e.Firstname || ' ' || e.Lastname AS fullName,
+                e.Phone_number AS phoneNumber,
+                e.Email,
+                CAST(e.Status AS TEXT) AS status,
+                COALESCE(COUNT(emp.Employee_id), 0) AS activeEmployeeCount
+            FROM EMPLOYER e
+            LEFT JOIN EMPLOYMENT emp
+                ON e.Id = emp.Employer_id
+                AND emp.Status = CAST('ACTIVE' AS active_status_type)
+            WHERE
+                (CAST(:nameFilter AS TEXT) IS NULL OR
+                 LOWER(e.Firstname || ' ' || e.Lastname) LIKE LOWER('%' || CAST(:nameFilter AS TEXT) || '%'))
+                AND (CAST(:statusFilter AS TEXT) IS NULL OR e.Status = CAST(:statusFilter AS active_status_type))
+            GROUP BY e.Id, e.Firstname, e.Lastname, e.Phone_number, e.Email, e.Status
+            ORDER BY
+                CASE WHEN e.Status = CAST('ACTIVE' AS active_status_type) THEN 0 ELSE 1 END,
+                e.Firstname || ' ' || e.Lastname ASC
+            LIMIT :size OFFSET :offset
+            """;
+
+        int offset = page * size;
+
+        return jdbcClient.sql(sql)
+                .param("nameFilter", nameFilter)
+                .param("statusFilter", statusFilter)
+                .param("size", size)
+                .param("offset", offset)
+                .query(EmployerSummary.class)
+                .list();
     }
 }

@@ -3,6 +3,9 @@ package ku.cs.mtf_backend.controller;
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
+import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
+import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Employer;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.EmployerService;
@@ -56,6 +59,26 @@ public class EmployerController {
         } catch (IllegalArgumentException e) {
             // Catches the exception for duplicate email/phone on another employer.
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<EmployerStatisticsResponse> getStatistics() {
+        EmployerStatisticsResponse statistics = employerService.getStatistics();
+        return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getEmployers(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(required = false) String nameContains,
+            @RequestParam(required = false) String status) {
+        try {
+            PageResponse<EmployerSummaryDTO> response = employerService.getEmployersWithPagination(page, size, nameContains, status);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }

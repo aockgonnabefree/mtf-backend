@@ -1,7 +1,9 @@
 package ku.cs.mtf_backend.repository;
 
+import ku.cs.mtf_backend.dto.projection.EmployerSummary;
 import ku.cs.mtf_backend.entity.Employer;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EmployerRepository {
@@ -13,4 +15,11 @@ public interface EmployerRepository {
     Optional<Employer> findByEmail(String email);
     Optional<Employer> findByPhoneNumber(String phoneNumber);
     Employer update(Employer employer);
+
+    // Statistics methods
+    long countAll();
+    long countByStatus(String status);
+
+    // Pagination and filtering
+    List<EmployerSummary> findAllWithPagination(Integer page, Integer size, String nameFilter, String statusFilter);
 }

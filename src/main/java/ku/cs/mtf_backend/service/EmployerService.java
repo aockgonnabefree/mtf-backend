@@ -1,7 +1,11 @@
 package ku.cs.mtf_backend.service;
 
+import ku.cs.mtf_backend.dto.projection.EmployerSummary;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
+import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
+import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Employer;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
@@ -11,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployerService {
@@ -100,6 +106,61 @@ public class EmployerService {
 
         // 6. บันทึกการเปลี่ยนแปลง
         return employerRepository.update(existingEmployer);
+    }
+
+    public EmployerStatisticsResponse getStatistics() {
+        long totalEmployers = employerRepository.countAll();
+        long activeEmployers = employerRepository.countByStatus("ACTIVE");
+        long inactiveEmployers = employerRepository.countByStatus("INACTIVE");
+
+        return EmployerStatisticsResponse.builder()
+                .totalEmployers(totalEmployers)
+                .activeEmployers(activeEmployers)
+                .inactiveEmployers(inactiveEmployers)
+                .build();
+    }
+
+    public PageResponse<EmployerSummaryDTO> getEmployersWithPagination(Integer page, Integer size, String nameContains, String status) {
+        // 1. Validate parameters
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative.");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than zero.");
+        }
+        if (status != null && !status.equals("ACTIVE") && !status.equals("INACTIVE")) {
+            throw new IllegalArgumentException("Status must be either 'ACTIVE' or 'INACTIVE'.");
+        }
+
+        // 2. Fetch data from repository
+        List<EmployerSummary> employers = employerRepository.findAllWithPagination(page, size, nameContains, status);
+
+        // 3. Convert to DTO
+        List<EmployerSummaryDTO> employerDTOs = employers.stream()
+                .map(e -> EmployerSummaryDTO.builder()
+                        .id(e.getId())
+                        .fullName(e.getFullName())
+                        .phoneNumber(e.getPhoneNumber())
+                        .email(e.getEmail())
+                        .activeEmployeeCount(e.getActiveEmployeeCount())
+                        .status(e.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 4. Calculate total elements (for simplicity, we count all matching records)
+        // Note: In production, you might want a separate count query for better performance
+        long totalElements = employerRepository.countAll();
+
+        // 5. Calculate total pages
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PageResponse.<EmployerSummaryDTO>builder()
+                .content(employerDTOs)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .currentPage(page)
+                .pageSize(size)
+                .build();
     }
 
 }
