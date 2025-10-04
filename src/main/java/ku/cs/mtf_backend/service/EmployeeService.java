@@ -2,6 +2,7 @@ package ku.cs.mtf_backend.service;
 
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
+import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Employee;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
@@ -100,5 +101,26 @@ public class EmployeeService {
         employmentService.changeEmployerForEmployee(passportNo, payload.getEmployerId());
 
         return updatedEmployee;
+    }
+
+    public EmployeeStatisticsResponse getStatistics(Integer daysThreshold) {
+        // 1. นับจำนวนลูกจ้างทั้งหมด
+        long totalEmployees = employeeRepository.countAll();
+
+        // 2. นับลูกจ้างที่มีเอกสารหมดอายุ (กรณีแย่ที่สุด)
+        long expiredDocumentEmployees = employeeRepository.countWithExpiredDocuments();
+
+        // 3. นับลูกจ้างที่มีเอกสารใกล้หมดอายุ (ไม่รวมคนที่มีเอกสารหมดอายุแล้ว)
+        long expiringSoonEmployees = employeeRepository.countWithExpiringSoonDocuments(daysThreshold);
+
+        // 4. นับลูกจ้างที่เอกสารใช้งานได้หมด = ทั้งหมด - หมดอายุ - ใกล้หมดอายุ
+        long validDocumentEmployees = totalEmployees - expiredDocumentEmployees - expiringSoonEmployees;
+
+        return EmployeeStatisticsResponse.builder()
+                .totalEmployees(totalEmployees)
+                .validDocumentEmployees(validDocumentEmployees)
+                .expiringSoonEmployees(expiringSoonEmployees)
+                .expiredDocumentEmployees(expiredDocumentEmployees)
+                .build();
     }
 }

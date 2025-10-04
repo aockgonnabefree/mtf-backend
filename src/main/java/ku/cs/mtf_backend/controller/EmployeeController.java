@@ -3,6 +3,7 @@ package ku.cs.mtf_backend.controller;
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
+import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.entity.Employee;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.EmployeeService;
@@ -54,5 +55,12 @@ public class EmployeeController {
             // กรณีข้อมูลขัดแย้งอื่นๆ ที่ไม่ใช่ Not Found
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<EmployeeStatisticsResponse> getStatistics(
+            @RequestParam(defaultValue = "30") Integer daysThreshold) {
+        EmployeeStatisticsResponse statistics = employeeService.getStatistics(daysThreshold);
+        return ResponseEntity.ok(statistics);
     }
 }

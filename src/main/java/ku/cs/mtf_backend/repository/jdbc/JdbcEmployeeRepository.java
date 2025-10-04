@@ -89,4 +89,44 @@ public class JdbcEmployeeRepository implements EmployeeRepository {
 
         return employee;
     }
+
+    @Override
+    public long countAll() {
+        String sql = "SELECT COUNT(*) FROM EMPLOYEE";
+        Long count = jdbcClient.sql(sql).query(Long.class).single();
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long countWithExpiredDocuments() {
+        String sql = """
+            SELECT COUNT(DISTINCT e.Passport_number)
+            FROM EMPLOYEE e
+            INNER JOIN DOCUMENT d ON e.Passport_number = d.Employee_id
+            WHERE d.Expiry_date < CURRENT_DATE
+            """;
+        Long count = jdbcClient.sql(sql).query(Long.class).single();
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long countWithExpiringSoonDocuments(int daysThreshold) {
+        String sql = """
+            SELECT COUNT(DISTINCT e.Passport_number)
+            FROM EMPLOYEE e
+            INNER JOIN DOCUMENT d ON e.Passport_number = d.Employee_id
+            WHERE d.Expiry_date >= CURRENT_DATE
+              AND d.Expiry_date <= CURRENT_DATE + CAST(:daysThreshold AS INTEGER)
+              AND e.Passport_number NOT IN (
+                  SELECT DISTINCT Employee_id
+                  FROM DOCUMENT
+                  WHERE Expiry_date < CURRENT_DATE
+              )
+            """;
+        Long count = jdbcClient.sql(sql)
+                .param("daysThreshold", daysThreshold)
+                .query(Long.class)
+                .single();
+        return count != null ? count : 0L;
+    }
 }

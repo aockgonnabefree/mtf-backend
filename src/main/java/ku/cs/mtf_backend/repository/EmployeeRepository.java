@@ -10,4 +10,9 @@ public interface EmployeeRepository {
     boolean existsById(String passportNo);
     Optional<Employee> findById(String passportNo);
     Employee update(Employee employee);
+
+    // Statistics methods
+    long countAll();
+    long countWithExpiredDocuments();
+    long countWithExpiringSoonDocuments(int daysThreshold);
 }
