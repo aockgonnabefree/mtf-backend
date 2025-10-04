@@ -9,4 +9,5 @@ public interface EmploymentRepository {
     Optional<Employment> findActiveByEmployeeId(String employeeId);
     Optional<Employment> findByEmployerIdAndEmployeeId(String employerId, String employeeId);
     int updateStatus(String employerId, String employeeId, String status);
+    Optional<Employment> findByEmployeeIdAndStatus(String employeeId, String status);
 }

@@ -60,4 +60,14 @@ public class JdbcEmploymentRepository implements EmploymentRepository {
                 .param("employeeId", employeeId)
                 .update();
     }
+
+    @Override
+    public Optional<Employment> findByEmployeeIdAndStatus(String employeeId, String status) {
+        String sql = "SELECT * FROM EMPLOYMENT WHERE Employee_id = :employeeId AND Status = CAST(:status AS active_status_type)";
+        return jdbcClient.sql(sql)
+                .param("employeeId", employeeId)
+                .param("status", status)
+                .query(Employment.class)
+                .optional();
+    }
 }
