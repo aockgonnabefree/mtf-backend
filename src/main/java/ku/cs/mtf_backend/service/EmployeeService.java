@@ -3,16 +3,21 @@ package ku.cs.mtf_backend.service;
 import ku.cs.mtf_backend.dto.projection.EmployeeSummary;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
+import ku.cs.mtf_backend.dto.response.EmployeeDetailResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Document;
 import ku.cs.mtf_backend.entity.Employee;
+import ku.cs.mtf_backend.entity.Employer;
+import ku.cs.mtf_backend.entity.Employment;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
+import ku.cs.mtf_backend.repository.AddressRepository;
 import ku.cs.mtf_backend.repository.DocumentRepository;
 import ku.cs.mtf_backend.repository.EmployeeRepository;
 import ku.cs.mtf_backend.repository.EmployerRepository;
+import ku.cs.mtf_backend.repository.EmploymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +33,25 @@ public class EmployeeService {
     private DocumentService documentService;
     private EmploymentService employmentService;
     private DocumentRepository documentRepository;
+    private AddressRepository addressRepository;
+    private EmploymentRepository employmentRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository,
                            EmployerRepository employerRepository,
                            AddressService addressService,
                            DocumentService documentService,
                            EmploymentService employmentService,
-                           DocumentRepository documentRepository) {
+                           DocumentRepository documentRepository,
+                           AddressRepository addressRepository,
+                           EmploymentRepository employmentRepository) {
         this.employeeRepository = employeeRepository;
         this.employerRepository = employerRepository;
         this.addressService = addressService;
         this.documentService = documentService;
         this.employmentService = employmentService;
         this.documentRepository = documentRepository;
+        this.addressRepository = addressRepository;
+        this.employmentRepository = employmentRepository;
     }
 
     @Transactional
@@ -224,5 +235,66 @@ public class EmployeeService {
         }
 
         return statuses;
+    }
+
+    public EmployeeDetailResponse getEmployeeById(String passportNumber) {
+        // 1. ค้นหา Employee
+        Employee employee = employeeRepository.findById(passportNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with passport number: " + passportNumber));
+
+        // 2. ค้นหา Address
+        Address address = addressRepository.findById(employee.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + employee.getAddressId()));
+
+        // 3. ค้นหา Documents
+        List<Document> documents = documentRepository.findAllByEmployeeId(passportNumber);
+
+        // 4. ค้นหา Employment และ Employer ปัจจุบัน
+        Optional<Employment> activeEmployment = employmentRepository.findActiveByEmployeeId(passportNumber);
+        EmployeeDetailResponse.CurrentEmployerResponse currentEmployerResponse = null;
+
+        if (activeEmployment.isPresent()) {
+            String employerId = activeEmployment.get().getEmployerId();
+            Optional<Employer> employer = employerRepository.findById(employerId);
+
+            if (employer.isPresent()) {
+                Employer emp = employer.get();
+                currentEmployerResponse = EmployeeDetailResponse.CurrentEmployerResponse.builder()
+                        .employerId(emp.getId())
+                        .fullName(emp.getFirstname() + " " + emp.getLastname())
+                        .companyName(emp.getCompanyName())
+                        .build();
+            }
+        }
+
+        // 5. Build response
+        return EmployeeDetailResponse.builder()
+                .passportNumber(employee.getPassportNumber())
+                .firstname(employee.getFirstname())
+                .lastname(employee.getLastname())
+                .nationality(employee.getNationality())
+                .bloodType(employee.getBloodType())
+                .status(employee.getStatus())
+                .address(EmployeeDetailResponse.AddressResponse.builder()
+                        .id(address.getId())
+                        .addrDetailTh(address.getAddrDetailTh())
+                        .subDistrictTh(address.getSubDistrictTh())
+                        .districtTh(address.getDistrictTh())
+                        .provinceTh(address.getProvinceTh())
+                        .addrDetailEn(address.getAddrDetailEn())
+                        .subDistrictEn(address.getSubDistrictEn())
+                        .districtEn(address.getDistrictEn())
+                        .provinceEn(address.getProvinceEn())
+                        .postalCode(address.getPostalCode())
+                        .build())
+                .documents(documents.stream()
+                        .map(doc -> EmployeeDetailResponse.DocumentResponse.builder()
+                                .id(doc.getId())
+                                .type(doc.getType())
+                                .expiryDate(doc.getExpiryDate())
+                                .build())
+                        .collect(Collectors.toList()))
+                .currentEmployer(currentEmployerResponse)
+                .build();
     }
 }

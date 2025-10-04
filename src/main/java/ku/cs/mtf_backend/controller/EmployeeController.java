@@ -3,6 +3,7 @@ package ku.cs.mtf_backend.controller;
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
+import ku.cs.mtf_backend.dto.response.EmployeeDetailResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -78,6 +79,16 @@ public class EmployeeController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{passportNumber}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable String passportNumber) {
+        try {
+            EmployeeDetailResponse employee = employeeService.getEmployeeById(passportNumber);
+            return ResponseEntity.ok(employee);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 }
