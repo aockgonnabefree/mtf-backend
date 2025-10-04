@@ -3,12 +3,14 @@ package ku.cs.mtf_backend.service;
 import ku.cs.mtf_backend.dto.projection.EmployerSummary;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
+import ku.cs.mtf_backend.dto.response.EmployerDetailResponse;
 import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Employer;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
+import ku.cs.mtf_backend.repository.AddressRepository;
 import ku.cs.mtf_backend.repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,11 +25,14 @@ import java.util.stream.Collectors;
 public class EmployerService {
     private final EmployerRepository employerRepository;
     private final AddressService addressService;
+    private final AddressRepository addressRepository;
 
     @Autowired
-    public EmployerService(EmployerRepository employerRepository, AddressService addressService) {
+    public EmployerService(EmployerRepository employerRepository, AddressService addressService,
+                           AddressRepository addressRepository) {
         this.employerRepository = employerRepository;
         this.addressService = addressService;
+        this.addressRepository = addressRepository;
     }
 
     @Transactional
@@ -148,7 +153,6 @@ public class EmployerService {
                 .collect(Collectors.toList());
 
         // 4. Calculate total elements (for simplicity, we count all matching records)
-        // Note: In production, you might want a separate count query for better performance
         long totalElements = employerRepository.countAll();
 
         // 5. Calculate total pages
@@ -160,6 +164,45 @@ public class EmployerService {
                 .totalPages(totalPages)
                 .currentPage(page)
                 .pageSize(size)
+                .build();
+    }
+
+    public EmployerDetailResponse getEmployerById(String employerId) {
+        // 1. ค้นหา Employer
+        Employer employer = employerRepository.findById(employerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employer not found with id: " + employerId));
+
+        // 2. ค้นหา Address
+        Address address = addressRepository.findById(employer.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + employer.getAddressId()));
+
+        // 3. Build response
+        return EmployerDetailResponse.builder()
+                .id(employer.getId())
+                .firstname(employer.getFirstname())
+                .lastname(employer.getLastname())
+                .email(employer.getEmail())
+                .phoneNumber(employer.getPhoneNumber())
+                .businessType(employer.getBusinessType())
+                .companyName(employer.getCompanyName())
+                .status(employer.getStatus())
+                .financialStatusYear(employer.getFinancialStatusYear())
+                .financialStatusIncome(employer.getFinancialStatusIncome())
+                .financialStatusTax(employer.getFinancialStatusTax())
+                .currentIncome(employer.getCurrentIncome())
+                .incomeDuration(employer.getIncomeDuration())
+                .address(EmployerDetailResponse.AddressResponse.builder()
+                        .id(address.getId())
+                        .addrDetailTh(address.getAddrDetailTh())
+                        .subDistrictTh(address.getSubDistrictTh())
+                        .districtTh(address.getDistrictTh())
+                        .provinceTh(address.getProvinceTh())
+                        .addrDetailEn(address.getAddrDetailEn())
+                        .subDistrictEn(address.getSubDistrictEn())
+                        .districtEn(address.getDistrictEn())
+                        .provinceEn(address.getProvinceEn())
+                        .postalCode(address.getPostalCode())
+                        .build())
                 .build();
     }
 

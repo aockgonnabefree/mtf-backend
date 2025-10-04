@@ -3,6 +3,7 @@ package ku.cs.mtf_backend.controller;
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
+import ku.cs.mtf_backend.dto.response.EmployerDetailResponse;
 import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -79,6 +80,16 @@ public class EmployerController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{employerId}")
+    public ResponseEntity<?> getEmployerById(@PathVariable String employerId) {
+        try {
+            EmployerDetailResponse employer = employerService.getEmployerById(employerId);
+            return ResponseEntity.ok(employer);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 }
