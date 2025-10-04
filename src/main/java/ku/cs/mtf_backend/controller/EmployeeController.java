@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
 import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
+import ku.cs.mtf_backend.dto.response.EmployeeSummaryDTO;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Employee;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.EmployeeService;
@@ -62,5 +64,20 @@ public class EmployeeController {
             @RequestParam(defaultValue = "30") Integer daysThreshold) {
         EmployeeStatisticsResponse statistics = employeeService.getStatistics(daysThreshold);
         return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getEmployees(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(required = false) String nameContains,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "30") Integer daysThreshold) {
+        try {
+            PageResponse<EmployeeSummaryDTO> response = employeeService.getEmployeesWithPagination(page, size, nameContains, status, daysThreshold);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
     }
 }

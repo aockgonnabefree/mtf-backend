@@ -1,7 +1,9 @@
 package ku.cs.mtf_backend.repository;
 
+import ku.cs.mtf_backend.dto.projection.EmployeeSummary;
 import ku.cs.mtf_backend.entity.Employee;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository {
@@ -15,4 +17,7 @@ public interface EmployeeRepository {
     long countAll();
     long countWithExpiredDocuments();
     long countWithExpiringSoonDocuments(int daysThreshold);
+
+    // Pagination and filtering
+    List<EmployeeSummary> findAllWithPagination(Integer page, Integer size, String nameFilter, String statusFilter);
 }

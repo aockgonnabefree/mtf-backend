@@ -1,11 +1,13 @@
 package ku.cs.mtf_backend.repository.jdbc;
 
+import ku.cs.mtf_backend.dto.projection.EmployeeSummary;
 import ku.cs.mtf_backend.entity.Employee;
 import ku.cs.mtf_backend.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -128,5 +130,40 @@ public class JdbcEmployeeRepository implements EmployeeRepository {
                 .query(Long.class)
                 .single();
         return count != null ? count : 0L;
+    }
+
+    @Override
+    public List<EmployeeSummary> findAllWithPagination(Integer page, Integer size, String nameFilter, String statusFilter) {
+        String sql = """
+            SELECT
+                e.Passport_number AS passportNumber,
+                e.Firstname || ' ' || e.Lastname AS fullName,
+                COALESCE(emp.Employer_id || ' - ' || empr.Firstname || ' ' || empr.Lastname, '-') AS currentEmployer,
+                CAST(e.Status AS TEXT) AS status
+            FROM EMPLOYEE e
+            LEFT JOIN EMPLOYMENT emp
+                ON e.Passport_number = emp.Employee_id
+                AND emp.Status = CAST('ACTIVE' AS active_status_type)
+            LEFT JOIN EMPLOYER empr
+                ON emp.Employer_id = empr.Id
+            WHERE
+                (CAST(:nameFilter AS TEXT) IS NULL OR
+                 LOWER(e.Firstname || ' ' || e.Lastname) LIKE LOWER('%' || CAST(:nameFilter AS TEXT) || '%'))
+                AND (CAST(:statusFilter AS TEXT) IS NULL OR e.Status = CAST(:statusFilter AS active_status_type))
+            ORDER BY
+                CASE WHEN e.Status = CAST('ACTIVE' AS active_status_type) THEN 0 ELSE 1 END,
+                e.Firstname || ' ' || e.Lastname ASC
+            LIMIT :size OFFSET :offset
+            """;
+
+        int offset = page * size;
+
+        return jdbcClient.sql(sql)
+                .param("nameFilter", nameFilter)
+                .param("statusFilter", statusFilter)
+                .param("size", size)
+                .param("offset", offset)
+                .query(EmployeeSummary.class)
+                .list();
     }
 }

@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class JdbcDocumentRepository implements DocumentRepository {
@@ -108,5 +109,20 @@ public class JdbcDocumentRepository implements DocumentRepository {
         sql = sql.replace("?", inSql);
 
         jdbcTemplate.update(sql, documentIds.toArray());
+    }
+
+    @Override
+    public Map<String, List<Document>> findDocumentsByEmployeeIds(List<String> employeeIds) {
+        if (employeeIds == null || employeeIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        String inSql = String.join(",", Collections.nCopies(employeeIds.size(), "?"));
+        String sql = "SELECT * FROM DOCUMENT WHERE Employee_id IN (" + inSql + ")";
+
+        List<Document> documents = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Document.class), employeeIds.toArray());
+
+        return documents.stream()
+                .collect(Collectors.groupingBy(Document::getEmployeeId));
     }
 }
