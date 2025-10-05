@@ -70,4 +70,15 @@ public class JdbcEmploymentRepository implements EmploymentRepository {
                 .query(Employment.class)
                 .optional();
     }
+
+    @Override
+    public boolean existsByEmployerAndEmployee(String employerId, String employeeId) {
+        String sql = "SELECT COUNT(*) FROM EMPLOYMENT WHERE Employer_id = :employerId AND Employee_id = :employeeId";
+        Integer count = jdbcClient.sql(sql)
+                .param("employerId", employerId)
+                .param("employeeId", employeeId)
+                .query(Integer.class)
+                .single();
+        return count > 0;
+    }
 }

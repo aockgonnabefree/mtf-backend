@@ -10,4 +10,5 @@ public interface EmploymentRepository {
     Optional<Employment> findByEmployerIdAndEmployeeId(String employerId, String employeeId);
     int updateStatus(String employerId, String employeeId, String status);
     Optional<Employment> findByEmployeeIdAndStatus(String employeeId, String status);
+    boolean existsByEmployerAndEmployee(String employerId, String employeeId);
 }
