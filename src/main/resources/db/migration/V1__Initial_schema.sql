@@ -37,6 +37,11 @@ CREATE TYPE bill_status AS enum (
     'NOT_PAID'
 );
 
+CREATE TYPE work_status AS enum (
+    'FINISHED',
+    'NOT_FINISHED'
+);
+
 CREATE TABLE ADDRESS (
     Id VARCHAR(36) PRIMARY KEY,
     Addr_detail_th TEXT NOT NULL,
@@ -163,18 +168,18 @@ CREATE TABLE WP_46 (
 );
 
 CREATE TABLE WORK (
-    Id varchar(13) PRIMARY KEY,
+    Id varchar(36) PRIMARY KEY,
     Step varchar(255) NOT NULL,
     Detail varchar(255) NOT NULL,
-    under_resp_agent varchar(13) NOT NULL,
+    Status work_status NOT NULL,
 
+    under_resp_agent varchar(13) NOT NULL,
     CONSTRAINT fk_resp_agent_id FOREIGN KEY (under_resp_agent) REFERENCES AGENT (Id) ON DELETE CASCADE
 );
 
 CREATE TABLE WORK_DETAIL (
-    Work_id varchar(13) NOT NULL,
+    Work_id varchar(36) NOT NULL,
     Employee_id varchar(13) NOT NULL,
-    Detail varchar(255) NOT NULL,
 
     PRIMARY KEY (Work_id, Employee_id),
     CONSTRAINT fk_work_id FOREIGN KEY (Work_id) REFERENCES WORK (Id) ON DELETE CASCADE,
@@ -187,7 +192,7 @@ CREATE TABLE BILL (
     Status bill_status NOT NULL,
     Created_at timestamp NOT NULL,
     Paid_at timestamp NOT NULL,
-    Work_id varchar(13) NOT NULL,
 
+    Work_id varchar(36) NOT NULL,
     CONSTRAINT fk_work_id FOREIGN KEY (Work_id) REFERENCES WORK (Id) ON DELETE CASCADE
 );
