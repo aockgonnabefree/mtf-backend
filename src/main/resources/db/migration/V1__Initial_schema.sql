@@ -42,6 +42,11 @@ CREATE TYPE work_status AS enum (
     'NOT_FINISHED'
 );
 
+CREATE TYPE work_type AS enum (
+    'การขึ้นทะเบียนใหม่',
+    'การต่ออายุใบอนุญาตทำงาน'
+);
+
 CREATE TABLE ADDRESS (
     Id VARCHAR(36) PRIMARY KEY,
     Addr_detail_th TEXT NOT NULL,
@@ -170,6 +175,7 @@ CREATE TABLE WP_46 (
 CREATE TABLE WORK (
     Id varchar(36) PRIMARY KEY,
     Step varchar(255) NOT NULL,
+    Work_type work_type NOT NULL,
     Detail varchar(255) NOT NULL,
     Status work_status NOT NULL,
 
