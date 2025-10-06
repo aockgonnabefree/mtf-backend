@@ -43,8 +43,8 @@ CREATE TYPE work_status AS enum (
 );
 
 CREATE TYPE work_type AS enum (
-    'การขึ้นทะเบียนใหม่',
-    'การต่ออายุใบอนุญาตทำงาน'
+    'ขึ้นทะเบียนใหม่',
+    'ต่ออายุใบอนุญาตทำงาน'
 );
 
 CREATE TABLE ADDRESS (
