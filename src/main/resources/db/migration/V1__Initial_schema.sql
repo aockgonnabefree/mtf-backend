@@ -180,6 +180,7 @@ CREATE TABLE WORK (
     Detail varchar(255) NOT NULL,
     Status work_status NOT NULL,
     Total_price NUMERIC(15, 2) NOT NULL,
+    Updated_at timestamp NOT NULL,
 
     Employer_id varchar(13) NOT NULL,
     under_resp_agent varchar(13) NOT NULL,

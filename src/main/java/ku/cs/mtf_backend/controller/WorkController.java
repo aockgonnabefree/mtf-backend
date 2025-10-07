@@ -1,8 +1,11 @@
 package ku.cs.mtf_backend.controller;
 
 import jakarta.validation.Valid;
+import ku.cs.mtf_backend.dto.projection.WorkSummary;
 import ku.cs.mtf_backend.dto.request.CreateWorkPayload;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.dto.response.WorkDetailResponse;
+import ku.cs.mtf_backend.dto.response.WorkStatisticsResponse;
 import ku.cs.mtf_backend.entity.Work;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.WorkService;
@@ -35,6 +38,27 @@ public class WorkController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<WorkStatisticsResponse> getStatistics() {
+        WorkStatisticsResponse statistics = workService.getStatistics();
+        return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getWorks(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(required = false) String employerName,
+            @RequestParam(required = false) String workType,
+            @RequestParam(required = false) String status) {
+        try {
+            PageResponse<WorkSummary> response = workService.getWorksWithPagination(page, size, employerName, workType, status);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }

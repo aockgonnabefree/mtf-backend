@@ -1,8 +1,11 @@
 package ku.cs.mtf_backend.service;
 
 import ku.cs.mtf_backend.config.WorkStepConfig;
+import ku.cs.mtf_backend.dto.projection.WorkSummary;
 import ku.cs.mtf_backend.dto.request.CreateWorkPayload;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.dto.response.WorkDetailResponse;
+import ku.cs.mtf_backend.dto.response.WorkStatisticsResponse;
 import ku.cs.mtf_backend.entity.*;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.repository.*;
@@ -88,6 +91,7 @@ public class WorkService {
                 .detail(payload.getDetail())
                 .status("NOT_FINISHED")
                 .totalPrice(totalWorkPrice)
+                .updatedAt(LocalDateTime.now())
                 .employerId(payload.getEmployerId())
                 .underRespAgent(payload.getAgentId())
                 .build();
@@ -246,5 +250,40 @@ public class WorkService {
 
         workRepository.updateStatus(workId, "FINISHED");
         return workRepository.findById(workId).orElseThrow();
+    }
+
+    public WorkStatisticsResponse getStatistics() {
+        long total = workRepository.countAll();
+        long finished = workRepository.countByStatus("FINISHED");
+        long inProgress = workRepository.countByStatus("NOT_FINISHED");
+
+        return WorkStatisticsResponse.builder()
+                .totalWorks(total)
+                .finishedWorks(finished)
+                .inProgressWorks(inProgress)
+                .build();
+    }
+
+    public PageResponse<WorkSummary> getWorksWithPagination(Integer page, Integer size,
+                                                             String employerName, String workType, String status) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than 0");
+        }
+
+        int offset = page * size;
+        List<WorkSummary> works = workRepository.findAllSummariesWithFilters(employerName, workType, status, offset, size);
+        long totalElements = workRepository.countWithFilters(employerName, workType, status);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PageResponse.<WorkSummary>builder()
+                .content(works)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .currentPage(page)
+                .pageSize(size)
+                .build();
     }
 }
