@@ -1,7 +1,10 @@
 package ku.cs.mtf_backend.service;
 
+import ku.cs.mtf_backend.dto.projection.AgentSummary;
 import ku.cs.mtf_backend.dto.request.CreateAgentPayload;
 import ku.cs.mtf_backend.dto.response.AgentCreationResponse;
+import ku.cs.mtf_backend.dto.response.AgentStatisticsResponse;
+import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Agent;
 import ku.cs.mtf_backend.repository.AgentRepository;
@@ -9,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class AgentService {
@@ -59,5 +64,40 @@ public class AgentService {
 
         // 6. Return both agent and plain password
         return new AgentCreationResponse(savedAgent, plainPassword);
+    }
+
+    public AgentStatisticsResponse getStatistics() {
+        long total = agentRepository.countAll();
+        long active = agentRepository.countByStatus("ACTIVE");
+        long inactive = agentRepository.countByStatus("INACTIVE");
+
+        return AgentStatisticsResponse.builder()
+                .totalAgents(total)
+                .activeAgents(active)
+                .inactiveAgents(inactive)
+                .build();
+    }
+
+    public PageResponse<AgentSummary> getAgentsWithPagination(Integer page, Integer size,
+                                                               String fullName, String status) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than 0");
+        }
+
+        int offset = page * size;
+        List<AgentSummary> agents = agentRepository.findAllSummariesWithFilters(fullName, status, offset, size);
+        long totalElements = agentRepository.countWithFilters(fullName, status);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PageResponse.<AgentSummary>builder()
+                .content(agents)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .currentPage(page)
+                .pageSize(size)
+                .build();
     }
 }
