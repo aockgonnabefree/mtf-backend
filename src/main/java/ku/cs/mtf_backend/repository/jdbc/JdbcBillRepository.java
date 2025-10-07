@@ -1,5 +1,6 @@
 package ku.cs.mtf_backend.repository.jdbc;
 
+import ku.cs.mtf_backend.dto.projection.BillSummary;
 import ku.cs.mtf_backend.entity.Bill;
 import ku.cs.mtf_backend.repository.BillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,6 +125,115 @@ public class JdbcBillRepository implements BillRepository {
         }
 
         return bill;
+    }
+
+    @Override
+    public long countAll() {
+        String sql = "SELECT COUNT(*) FROM BILL";
+        return jdbcClient.sql(sql).query(Long.class).single();
+    }
+
+    @Override
+    public long countByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM BILL WHERE Status = CAST(:status AS bill_status)";
+        return jdbcClient.sql(sql)
+                .param("status", status)
+                .query(Long.class)
+                .single();
+    }
+
+    @Override
+    public List<BillSummary> findAllSummariesWithFilters(String employerName, String workType, String paymentStatus,
+                                                          int offset, int limit) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                b.Id as billId,
+                CONCAT(e.Firstname, ' ', e.Lastname) as employerName,
+                w.Work_type as workType,
+                b.Step_index as stepIndex,
+                b.Step_name as stepName,
+                b.Price as price,
+                b.Status as paymentStatus
+            FROM BILL b
+            JOIN WORK w ON b.Work_id = w.Id
+            JOIN EMPLOYER e ON w.Employer_id = e.Id
+            WHERE 1=1
+            """);
+
+        if (employerName != null && !employerName.isBlank()) {
+            sql.append(" AND (e.Firstname ILIKE :employerName OR e.Lastname ILIKE :employerName OR e.Company_name ILIKE :employerName)");
+        }
+        if (workType != null && !workType.isBlank()) {
+            sql.append(" AND w.Work_type = CAST(:workType AS work_type)");
+        }
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            sql.append(" AND b.Status = CAST(:paymentStatus AS bill_status)");
+        }
+
+        sql.append(" ORDER BY b.Created_at DESC");
+        sql.append(" OFFSET :offset LIMIT :limit");
+
+        var query = jdbcClient.sql(sql.toString())
+                .param("offset", offset)
+                .param("limit", limit);
+
+        if (employerName != null && !employerName.isBlank()) {
+            query = query.param("employerName", "%" + employerName + "%");
+        }
+        if (workType != null && !workType.isBlank()) {
+            query = query.param("workType", workType);
+        }
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            query = query.param("paymentStatus", paymentStatus);
+        }
+
+        return query.query(this::mapRowToBillSummary).list();
+    }
+
+    @Override
+    public long countWithFilters(String employerName, String workType, String paymentStatus) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) FROM BILL b
+            JOIN WORK w ON b.Work_id = w.Id
+            JOIN EMPLOYER e ON w.Employer_id = e.Id
+            WHERE 1=1
+            """);
+
+        if (employerName != null && !employerName.isBlank()) {
+            sql.append(" AND (e.Firstname ILIKE :employerName OR e.Lastname ILIKE :employerName OR e.Company_name ILIKE :employerName)");
+        }
+        if (workType != null && !workType.isBlank()) {
+            sql.append(" AND w.Work_type = CAST(:workType AS work_type)");
+        }
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            sql.append(" AND b.Status = CAST(:paymentStatus AS bill_status)");
+        }
+
+        var query = jdbcClient.sql(sql.toString());
+
+        if (employerName != null && !employerName.isBlank()) {
+            query = query.param("employerName", "%" + employerName + "%");
+        }
+        if (workType != null && !workType.isBlank()) {
+            query = query.param("workType", workType);
+        }
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            query = query.param("paymentStatus", paymentStatus);
+        }
+
+        return query.query(Long.class).single();
+    }
+
+    private BillSummary mapRowToBillSummary(ResultSet rs, int rowNum) throws SQLException {
+        return new BillSummary(
+                rs.getString("billId"),
+                rs.getString("employerName"),
+                rs.getString("workType"),
+                (Integer) rs.getObject("stepIndex"),
+                rs.getString("stepName"),
+                rs.getBigDecimal("price"),
+                rs.getString("paymentStatus")
+        );
     }
 
     private Bill mapRowToBill(ResultSet rs, int rowNum) throws SQLException {
