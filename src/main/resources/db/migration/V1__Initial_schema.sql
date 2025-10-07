@@ -174,12 +174,16 @@ CREATE TABLE WP_46 (
 
 CREATE TABLE WORK (
     Id varchar(36) PRIMARY KEY,
-    Step varchar(255) NOT NULL,
+    Current_step_index INT NOT NULL,
+    Current_step_name VARCHAR(255) NOT NULL,
     Work_type work_type NOT NULL,
     Detail varchar(255) NOT NULL,
     Status work_status NOT NULL,
+    Total_price NUMERIC(15, 2) NOT NULL,
 
+    Employer_id varchar(13) NOT NULL,
     under_resp_agent varchar(13) NOT NULL,
+    CONSTRAINT fk_employer_id FOREIGN KEY (Employer_id) REFERENCES EMPLOYER (Id) ON DELETE CASCADE,
     CONSTRAINT fk_resp_agent_id FOREIGN KEY (under_resp_agent) REFERENCES AGENT (Id) ON DELETE CASCADE
 );
 
@@ -192,13 +196,28 @@ CREATE TABLE WORK_DETAIL (
     CONSTRAINT fk_employee_passport_number FOREIGN KEY (Employee_id) REFERENCES EMPLOYEE (Passport_number) ON DELETE CASCADE
 );
 
+CREATE TABLE PRICING (
+    Id varchar(36) PRIMARY KEY,
+    Work_type work_type NOT NULL UNIQUE,
+    Price_per_employee NUMERIC(10, 2) NOT NULL,
+    Updated_at timestamp NOT NULL
+);
+
 CREATE TABLE BILL (
-    Id varchar(13) PRIMARY KEY,
-    Price float NOT NULL,
+    Id varchar(36) PRIMARY KEY,
+    Step_index INT,
+    Step_name VARCHAR(255),
+    Price NUMERIC(10, 2) NOT NULL,
     Status bill_status NOT NULL,
     Created_at timestamp NOT NULL,
-    Paid_at timestamp NOT NULL,
+    Paid_at timestamp,
 
-    Work_id varchar(36) NOT NULL,
-    CONSTRAINT fk_work_id FOREIGN KEY (Work_id) REFERENCES WORK (Id) ON DELETE CASCADE
+    Work_id varchar(36),
+    CONSTRAINT fk_work_id FOREIGN KEY (Work_id) REFERENCES WORK (Id) ON DELETE CASCADE,
+    CONSTRAINT unique_work_step UNIQUE (Work_id, Step_index)
 );
+
+-- Insert default pricing
+INSERT INTO PRICING (Id, Work_type, Price_per_employee, Updated_at) VALUES
+    (gen_random_uuid(), CAST('ขึ้นทะเบียนใหม่' AS work_type), 15000.00, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), CAST('ต่ออายุใบอนุญาตทำงาน' AS work_type), 15000.00, CURRENT_TIMESTAMP);
