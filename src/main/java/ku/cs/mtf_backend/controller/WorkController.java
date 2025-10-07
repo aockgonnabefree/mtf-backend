@@ -43,7 +43,7 @@ public class WorkController {
     @GetMapping("/{workId}")
     public ResponseEntity<?> getWorkById(@PathVariable String workId) {
         try {
-            WorkDetailResponse response = workService.getWorkById(workId);
+            WorkDetailResponse response = workService.getWorkDetailById(workId);
             return ResponseEntity.ok(response);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));

@@ -29,8 +29,8 @@ public class CreateWorkPayload {
              message = "Work type must be 'ขึ้นทะเบียนใหม่' or 'ต่ออายุใบอนุญาตทำงาน'")
     private String workType;
 
-    @NotBlank(message = "Current step is required")
-    private String currentStep;
+    @NotNull(message = "Current step index is required")
+    private Integer currentStepIndex;
 
     @NotBlank(message = "Detail is required")
     private String detail;
@@ -49,10 +49,6 @@ public class CreateWorkPayload {
 
     public void setWorkType(String workType) {
         this.workType = (workType == null) ? null : workType.strip();
-    }
-
-    public void setCurrentStep(String currentStep) {
-        this.currentStep = (currentStep == null) ? null : currentStep.strip();
     }
 
     public void setDetail(String detail) {

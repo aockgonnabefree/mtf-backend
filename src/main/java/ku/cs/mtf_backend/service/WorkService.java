@@ -69,19 +69,21 @@ public class WorkService {
         BigDecimal totalWorkPrice = pricing.getPricePerEmployee().multiply(BigDecimal.valueOf(employeeCount));
         BigDecimal pricePerBill = totalWorkPrice.divide(BigDecimal.valueOf(totalSteps), 2, RoundingMode.HALF_UP);
 
-        // 5. Validate current step matches work type and get step index (1-based)
-        int currentStepIndex = steps.indexOf(payload.getCurrentStep());
-        if (currentStepIndex == -1) {
-            throw new IllegalArgumentException("Invalid step '" + payload.getCurrentStep() +
-                    "' for work type '" + payload.getWorkType() + "'");
+        // 5. Validate current step index (1-based)
+        int currentStepIndex = payload.getCurrentStepIndex();
+        if (currentStepIndex < 1 || currentStepIndex > totalSteps) {
+            throw new IllegalArgumentException("Invalid step index: " + currentStepIndex +
+                    ". Must be between 1 and " + totalSteps);
         }
-        currentStepIndex = currentStepIndex + 1; // Convert to 1-based
+
+        // Get step name from index (convert to 0-based for list access)
+        String currentStepName = steps.get(currentStepIndex - 1);
 
         // 6. Create Work
         Work work = Work.builder()
                 .id(UUID.randomUUID().toString())
                 .currentStepIndex(currentStepIndex)
-                .currentStepName(payload.getCurrentStep())
+                .currentStepName(currentStepName)
                 .workType(payload.getWorkType())
                 .detail(payload.getDetail())
                 .status("NOT_FINISHED")
@@ -107,7 +109,7 @@ public class WorkService {
         Bill currentBill = Bill.builder()
                 .id(billId)
                 .stepIndex(currentStepIndex)
-                .stepName(payload.getCurrentStep())
+                .stepName(currentStepName)
                 .price(pricePerBill)
                 .status("NOT_PAID")
                 .createdAt(LocalDateTime.now())
@@ -120,7 +122,7 @@ public class WorkService {
         return savedWork;
     }
 
-    public WorkDetailResponse getWorkById(String workId) {
+    public WorkDetailResponse getWorkDetailById(String workId) {
         // 1. Find work
         Work work = workRepository.findById(workId)
                 .orElseThrow(() -> new ResourceNotFoundException("Work not found with ID: " + workId));
@@ -172,5 +174,77 @@ public class WorkService {
                 .employeesInWork(employees)
                 .agent(agentSummary)
                 .build();
+    }
+
+    @Transactional
+    public Work advanceToNextStep(String workId) {
+        // 1. Find work
+        Work work = workRepository.findById(workId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work not found with ID: " + workId));
+
+        // 2. Check if work is already finished
+        if ("FINISHED".equals(work.getStatus())) {
+            throw new IllegalStateException("Work is already finished");
+        }
+
+        // 3. Get steps for this work type
+        List<String> steps = WorkStepConfig.getStepsByWorkType(work.getWorkType());
+        int totalSteps = steps.size();
+
+        // 4. Check if current step is the last step
+        if (work.getCurrentStepIndex() >= totalSteps) {
+            throw new IllegalStateException("Work is already at the last step");
+        }
+
+        // 5. Advance to next step (1-based)
+        int nextStepIndex = work.getCurrentStepIndex() + 1;
+        String nextStepName = steps.get(nextStepIndex - 1); // Convert to 0-based for list access
+
+        // 6. Calculate price per bill
+        BigDecimal pricePerBill = work.getTotalPrice().divide(BigDecimal.valueOf(totalSteps), 2, RoundingMode.HALF_UP);
+
+        // 7. Create new bill for next step
+        String billId = billRepository.generateBillId(LocalDateTime.now().getYear());
+        Bill nextBill = Bill.builder()
+                .id(billId)
+                .stepIndex(nextStepIndex)
+                .stepName(nextStepName)
+                .price(pricePerBill)
+                .status("NOT_PAID")
+                .createdAt(LocalDateTime.now())
+                .paidAt(null)
+                .workId(workId)
+                .build();
+
+        billRepository.save(nextBill);
+
+        // 8. Update work to next step
+        workRepository.updateStep(workId, nextStepIndex, nextStepName);
+
+        // Return updated work
+        return workRepository.findById(workId).orElseThrow();
+    }
+
+    public Work getWorkById(String workId) {
+        return workRepository.findById(workId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work not found with ID: " + workId));
+    }
+
+    public boolean isLastStep(String workId) {
+        Work work = getWorkById(workId);
+        List<String> steps = WorkStepConfig.getStepsByWorkType(work.getWorkType());
+        return work.getCurrentStepIndex() == steps.size();
+    }
+
+    @Transactional
+    public Work markWorkAsFinished(String workId) {
+        Work work = getWorkById(workId);
+
+        if ("FINISHED".equals(work.getStatus())) {
+            throw new IllegalStateException("Work is already finished");
+        }
+
+        workRepository.updateStatus(workId, "FINISHED");
+        return workRepository.findById(workId).orElseThrow();
     }
 }

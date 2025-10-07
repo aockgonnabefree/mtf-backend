@@ -94,6 +94,38 @@ public class JdbcBillRepository implements BillRepository {
         return String.format("RCP-%d-%03d", year, nextNumber);
     }
 
+    @Override
+    public Bill update(Bill bill) {
+        String sql = """
+            UPDATE BILL
+            SET Step_index = :stepIndex,
+                Step_name = :stepName,
+                Price = :price,
+                Status = CAST(:status AS bill_status),
+                Created_at = :createdAt,
+                Paid_at = :paidAt,
+                Work_id = :workId
+            WHERE Id = :id
+            """;
+
+        int updated = jdbcClient.sql(sql)
+                .param("id", bill.getId())
+                .param("stepIndex", bill.getStepIndex())
+                .param("stepName", bill.getStepName())
+                .param("price", bill.getPrice())
+                .param("status", bill.getStatus())
+                .param("createdAt", bill.getCreatedAt())
+                .param("paidAt", bill.getPaidAt())
+                .param("workId", bill.getWorkId())
+                .update();
+
+        if (updated == 0) {
+            throw new RuntimeException("Bill not found with ID: " + bill.getId());
+        }
+
+        return bill;
+    }
+
     private Bill mapRowToBill(ResultSet rs, int rowNum) throws SQLException {
         return Bill.builder()
                 .id(rs.getString("Id"))
