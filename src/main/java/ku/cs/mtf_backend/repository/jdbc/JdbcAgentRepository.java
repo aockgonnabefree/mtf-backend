@@ -57,6 +57,34 @@ public class JdbcAgentRepository implements AgentRepository {
     }
 
     @Override
+    public Agent update(Agent agent) {
+        String sql = """
+            UPDATE AGENT
+            SET Firstname = :firstname,
+                Lastname = :lastname,
+                Email = :email,
+                Status = CAST(:status AS active_status_type),
+                Address_id = :addressId
+            WHERE Id = :id
+            """;
+
+        int updated = jdbcClient.sql(sql)
+                .param("id", agent.getId())
+                .param("firstname", agent.getFirstname())
+                .param("lastname", agent.getLastname())
+                .param("email", agent.getEmail())
+                .param("status", agent.getStatus())
+                .param("addressId", agent.getAddressId())
+                .update();
+
+        if (updated == 0) {
+            throw new RuntimeException("Agent not found with ID: " + agent.getId());
+        }
+
+        return agent;
+    }
+
+    @Override
     public Optional<Agent> findById(String id) {
         String sql = "SELECT * FROM AGENT WHERE Id = :id";
         return jdbcClient.sql(sql).param("id", id).query(Agent.class).optional();

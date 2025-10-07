@@ -2,11 +2,13 @@ package ku.cs.mtf_backend.service;
 
 import ku.cs.mtf_backend.dto.projection.AgentSummary;
 import ku.cs.mtf_backend.dto.request.CreateAgentPayload;
+import ku.cs.mtf_backend.dto.request.UpdateAgentPayload;
 import ku.cs.mtf_backend.dto.response.AgentCreationResponse;
 import ku.cs.mtf_backend.dto.response.AgentStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Agent;
+import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.repository.AgentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -99,5 +101,36 @@ public class AgentService {
                 .currentPage(page)
                 .pageSize(size)
                 .build();
+    }
+
+    @Transactional
+    public Agent updateAgent(String agentId, UpdateAgentPayload payload) {
+        // 1. Find existing agent
+        Agent existingAgent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent not found with ID: " + agentId));
+
+        // 2. Check if email is being changed and if it's already in use by another agent
+        if (!existingAgent.getEmail().equals(payload.getEmail())) {
+            if (agentRepository.existsByEmail(payload.getEmail())) {
+                throw new IllegalArgumentException("Email " + payload.getEmail() + " is already in use.");
+            }
+        }
+
+        // 3. Handle address update
+        Address address = addressService.findOrCreateAddress(payload.getAddress());
+
+        // 4. Build updated agent (keep password unchanged)
+        Agent updatedAgent = Agent.builder()
+                .id(agentId)
+                .firstname(payload.getFirstName())
+                .lastname(payload.getLastName())
+                .email(payload.getEmail())
+                .hashedPassword(existingAgent.getHashedPassword()) // Keep existing password
+                .status(payload.getStatus())
+                .addressId(address.getId())
+                .build();
+
+        // 5. Update agent
+        return agentRepository.update(updatedAgent);
     }
 }

@@ -10,6 +10,7 @@ public interface AgentRepository {
     boolean existsById(String id);
     boolean existsByEmail(String email);
     Agent save(Agent agent);
+    Agent update(Agent agent);
     Optional<Agent> findById(String id);
     Optional<Agent> findByEmail(String email);
     String generateNextAgentPassword();

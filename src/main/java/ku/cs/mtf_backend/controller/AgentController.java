@@ -3,9 +3,12 @@ package ku.cs.mtf_backend.controller;
 import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.projection.AgentSummary;
 import ku.cs.mtf_backend.dto.request.CreateAgentPayload;
+import ku.cs.mtf_backend.dto.request.UpdateAgentPayload;
 import ku.cs.mtf_backend.dto.response.AgentCreationResponse;
 import ku.cs.mtf_backend.dto.response.AgentStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
+import ku.cs.mtf_backend.entity.Agent;
+import ku.cs.mtf_backend.exception.ResourceNotFoundException;
 import ku.cs.mtf_backend.service.AgentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -59,6 +62,26 @@ public class AgentController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{agentId}")
+    public ResponseEntity<?> updateAgent(
+            @PathVariable String agentId,
+            @Valid @RequestBody UpdateAgentPayload payload) {
+        try {
+            Agent updatedAgent = agentService.updateAgent(agentId, payload);
+
+            Map<String, Object> response = Map.of(
+                    "message", "Agent updated successfully.",
+                    "agentId", updatedAgent.getId()
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }
