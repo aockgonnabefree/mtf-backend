@@ -4,6 +4,7 @@ import ku.cs.mtf_backend.dto.projection.EmployeeSummary;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
 import ku.cs.mtf_backend.dto.response.EmployeeDetailResponse;
+import ku.cs.mtf_backend.dto.response.EmployeeSelectDTO;
 import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -295,6 +296,38 @@ public class EmployeeService {
                                 .build())
                         .collect(Collectors.toList()))
                 .currentEmployer(currentEmployerResponse)
+                .build();
+    }
+
+    public PageResponse<EmployeeSelectDTO> getEmployeesByEmployerId(String employerId, String status, String nameContains, Integer page, Integer size) {
+        // Validate parameters
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative.");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than zero.");
+        }
+        if (status != null && !status.equals("ACTIVE") && !status.equals("INACTIVE")) {
+            throw new IllegalArgumentException("Status must be either 'ACTIVE', 'INACTIVE', or null for all statuses.");
+        }
+
+        // Calculate offset
+        int offset = page * size;
+
+        // Get employees from repository (even if employer doesn't exist, this will return empty list)
+        List<EmployeeSelectDTO> employees = employeeRepository.findEmployeesByEmployerId(employerId, status, nameContains, size, offset);
+
+        // Get total count for pagination
+        Long totalElements = employeeRepository.countEmployeesByEmployerId(employerId, status, nameContains);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        // Build page response
+        return PageResponse.<EmployeeSelectDTO>builder()
+                .content(employees)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .currentPage(page)
+                .pageSize(size)
                 .build();
     }
 }

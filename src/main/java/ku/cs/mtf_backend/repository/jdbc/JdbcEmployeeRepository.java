@@ -1,6 +1,7 @@
 package ku.cs.mtf_backend.repository.jdbc;
 
 import ku.cs.mtf_backend.dto.projection.EmployeeSummary;
+import ku.cs.mtf_backend.dto.response.EmployeeSelectDTO;
 import ku.cs.mtf_backend.entity.Employee;
 import ku.cs.mtf_backend.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,5 +166,55 @@ public class JdbcEmployeeRepository implements EmployeeRepository {
                 .param("offset", offset)
                 .query(EmployeeSummary.class)
                 .list();
+    }
+
+    @Override
+    public List<EmployeeSelectDTO> findEmployeesByEmployerId(String employerId, String statusFilter, String nameFilter, Integer size, Integer offset) {
+        String sql = """
+            SELECT
+                e.Passport_number AS id,
+                e.Firstname || ' ' || e.Lastname AS fullName,
+                CAST(e.Status AS TEXT) AS status
+            FROM EMPLOYEE e
+            INNER JOIN EMPLOYMENT emp ON e.Passport_number = emp.Employee_id
+            WHERE emp.Employer_id = :employerId
+                AND (CAST(:statusFilter AS TEXT) IS NULL OR e.Status = CAST(:statusFilter AS active_status_type))
+                AND (CAST(:nameFilter AS TEXT) IS NULL OR
+                     LOWER(e.Firstname || ' ' || e.Lastname) LIKE LOWER('%' || CAST(:nameFilter AS TEXT) || '%'))
+            ORDER BY
+                CASE WHEN e.Status = CAST('ACTIVE' AS active_status_type) THEN 0 ELSE 1 END,
+                e.Firstname || ' ' || e.Lastname ASC
+            LIMIT :size OFFSET :offset
+            """;
+
+        return jdbcClient.sql(sql)
+                .param("employerId", employerId)
+                .param("statusFilter", statusFilter)
+                .param("nameFilter", nameFilter)
+                .param("size", size)
+                .param("offset", offset)
+                .query(EmployeeSelectDTO.class)
+                .list();
+    }
+
+    @Override
+    public Long countEmployeesByEmployerId(String employerId, String statusFilter, String nameFilter) {
+        String sql = """
+            SELECT COUNT(e.Passport_number)
+            FROM EMPLOYEE e
+            INNER JOIN EMPLOYMENT emp ON e.Passport_number = emp.Employee_id
+            WHERE emp.Employer_id = :employerId
+                AND (CAST(:statusFilter AS TEXT) IS NULL OR e.Status = CAST(:statusFilter AS active_status_type))
+                AND (CAST(:nameFilter AS TEXT) IS NULL OR
+                     LOWER(e.Firstname || ' ' || e.Lastname) LIKE LOWER('%' || CAST(:nameFilter AS TEXT) || '%'))
+            """;
+
+        Long count = jdbcClient.sql(sql)
+                .param("employerId", employerId)
+                .param("statusFilter", statusFilter)
+                .param("nameFilter", nameFilter)
+                .query(Long.class)
+                .single();
+        return count != null ? count : 0L;
     }
 }

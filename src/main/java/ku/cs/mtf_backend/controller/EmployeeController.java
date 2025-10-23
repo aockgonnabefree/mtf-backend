@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployeePayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployeePayload;
 import ku.cs.mtf_backend.dto.response.EmployeeDetailResponse;
+import ku.cs.mtf_backend.dto.response.EmployeeSelectDTO;
 import ku.cs.mtf_backend.dto.response.EmployeeStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployeeSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -89,6 +91,21 @@ public class EmployeeController {
             return ResponseEntity.ok(employee);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/by-employer/{employerId}")
+    public ResponseEntity<?> getEmployeesByEmployerId(
+            @PathVariable String employerId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String nameContains,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "5") Integer size) {
+        try {
+            PageResponse<EmployeeSelectDTO> employees = employeeService.getEmployeesByEmployerId(employerId, status, nameContains, page, size);
+            return ResponseEntity.ok(employees);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }

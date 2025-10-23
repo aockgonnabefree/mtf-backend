@@ -186,7 +186,6 @@ public class JdbcEmployerRepository implements EmployerRepository {
                 e.Id as id,
                 e.Firstname || ' ' || e.Lastname AS fullName
             FROM EMPLOYER e
-            WHERE e.Status = CAST('ACTIVE' AS active_status_type)
             ORDER BY e.Firstname || ' ' || e.Lastname ASC
             """;
 
