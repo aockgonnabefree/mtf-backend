@@ -4,6 +4,7 @@ import ku.cs.mtf_backend.dto.projection.EmployerSummary;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
 import ku.cs.mtf_backend.dto.response.EmployerDetailResponse;
+import ku.cs.mtf_backend.dto.response.EmployerSelectDTO;
 import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -204,6 +205,10 @@ public class EmployerService {
                         .postalCode(address.getPostalCode())
                         .build())
                 .build();
+    }
+
+    public List<EmployerSelectDTO> getAllEmployersForSelect() {
+        return employerRepository.findAllEmployersForSelect();
     }
 
 }

@@ -1,6 +1,7 @@
 package ku.cs.mtf_backend.repository.jdbc;
 
 import ku.cs.mtf_backend.dto.projection.EmployerSummary;
+import ku.cs.mtf_backend.dto.response.EmployerSelectDTO;
 import ku.cs.mtf_backend.entity.Employer;
 import ku.cs.mtf_backend.repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -175,6 +176,22 @@ public class JdbcEmployerRepository implements EmployerRepository {
                 .param("size", size)
                 .param("offset", offset)
                 .query(EmployerSummary.class)
+                .list();
+    }
+
+    @Override
+    public List<EmployerSelectDTO> findAllEmployersForSelect() {
+        String sql = """
+            SELECT
+                e.Id as id,
+                e.Firstname || ' ' || e.Lastname AS fullName
+            FROM EMPLOYER e
+            WHERE e.Status = CAST('ACTIVE' AS active_status_type)
+            ORDER BY e.Firstname || ' ' || e.Lastname ASC
+            """;
+
+        return jdbcClient.sql(sql)
+                .query(EmployerSelectDTO.class)
                 .list();
     }
 }

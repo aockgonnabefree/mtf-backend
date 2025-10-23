@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import ku.cs.mtf_backend.dto.request.CreateEmployerPayload;
 import ku.cs.mtf_backend.dto.request.UpdateEmployerPayload;
 import ku.cs.mtf_backend.dto.response.EmployerDetailResponse;
+import ku.cs.mtf_backend.dto.response.EmployerSelectDTO;
 import ku.cs.mtf_backend.dto.response.EmployerStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.EmployerSummaryDTO;
 import ku.cs.mtf_backend.dto.response.PageResponse;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -67,6 +69,12 @@ public class EmployerController {
     public ResponseEntity<EmployerStatisticsResponse> getStatistics() {
         EmployerStatisticsResponse statistics = employerService.getStatistics();
         return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping("/selects")
+    public ResponseEntity<List<EmployerSelectDTO>> getEmployersForSelect() {
+        List<EmployerSelectDTO> employers = employerService.getAllEmployersForSelect();
+        return ResponseEntity.ok(employers);
     }
 
     @GetMapping

@@ -1,6 +1,7 @@
 package ku.cs.mtf_backend.repository;
 
 import ku.cs.mtf_backend.dto.projection.EmployerSummary;
+import ku.cs.mtf_backend.dto.response.EmployerSelectDTO;
 import ku.cs.mtf_backend.entity.Employer;
 
 import java.util.List;
@@ -22,4 +23,7 @@ public interface EmployerRepository {
 
     // Pagination and filtering
     List<EmployerSummary> findAllWithPagination(Integer page, Integer size, String nameFilter, String statusFilter);
+
+    // Get all employers for select/lookup
+    List<EmployerSelectDTO> findAllEmployersForSelect();
 }
