@@ -5,6 +5,7 @@ import ku.cs.mtf_backend.dto.projection.AgentSummary;
 import ku.cs.mtf_backend.dto.request.CreateAgentPayload;
 import ku.cs.mtf_backend.dto.request.UpdateAgentPayload;
 import ku.cs.mtf_backend.dto.response.AgentCreationResponse;
+import ku.cs.mtf_backend.dto.response.AgentDetailResponse;
 import ku.cs.mtf_backend.dto.response.AgentStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Agent;
@@ -45,6 +46,16 @@ public class AgentController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{agentId}")
+    public ResponseEntity<?> getAgent(@PathVariable String agentId) {
+        try {
+            AgentDetailResponse agent = agentService.getAgentById(agentId);
+            return ResponseEntity.ok(agent);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 

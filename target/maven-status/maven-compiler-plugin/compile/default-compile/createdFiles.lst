@@ -25,10 +25,12 @@ ku/cs/mtf_backend/entity/Employer$EmployerBuilder.class
 ku/cs/mtf_backend/service/AddressService.class
 ku/cs/mtf_backend/repository/jdbc/JdbcAgentRepository.class
 ku/cs/mtf_backend/repository/WorkRepository.class
+ku/cs/mtf_backend/dto/response/AgentDetailResponse.class
 ku/cs/mtf_backend/entity/Document.class
 ku/cs/mtf_backend/repository/AgentRepository.class
 ku/cs/mtf_backend/entity/Document$DocumentBuilder.class
 ku/cs/mtf_backend/config/WorkStepConfig.class
+ku/cs/mtf_backend/dto/response/AgentDetailResponse$AddressResponse.class
 ku/cs/mtf_backend/dto/response/WorkDetailResponse$EmployerSummary.class
 ku/cs/mtf_backend/dto/response/EmployeeStatisticsResponse$EmployeeStatisticsResponseBuilder.class
 ku/cs/mtf_backend/exception/GlobalExceptionHandler.class
@@ -141,6 +143,8 @@ ku/cs/mtf_backend/dto/response/WorkDetailResponse$WorkDetailResponseBuilder.clas
 ku/cs/mtf_backend/repository/jdbc/JdbcDocumentRepository$1.class
 ku/cs/mtf_backend/service/EmploymentService.class
 ku/cs/mtf_backend/dto/response/EmployeeDetailResponse.class
+ku/cs/mtf_backend/dto/response/AgentDetailResponse$AgentDetailResponseBuilder.class
+ku/cs/mtf_backend/dto/response/AgentDetailResponse$AddressResponse$AddressResponseBuilder.class
 ku/cs/mtf_backend/service/Wp46Service.class
 ku/cs/mtf_backend/dto/response/WorkDetailResponse$EmployeeInWork.class
 ku/cs/mtf_backend/repository/Wp46Repository.class

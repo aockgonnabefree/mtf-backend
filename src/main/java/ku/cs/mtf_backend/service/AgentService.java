@@ -4,11 +4,13 @@ import ku.cs.mtf_backend.dto.projection.AgentSummary;
 import ku.cs.mtf_backend.dto.request.CreateAgentPayload;
 import ku.cs.mtf_backend.dto.request.UpdateAgentPayload;
 import ku.cs.mtf_backend.dto.response.AgentCreationResponse;
+import ku.cs.mtf_backend.dto.response.AgentDetailResponse;
 import ku.cs.mtf_backend.dto.response.AgentStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Address;
 import ku.cs.mtf_backend.entity.Agent;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
+import ku.cs.mtf_backend.repository.AddressRepository;
 import ku.cs.mtf_backend.repository.AgentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,14 +24,17 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final AddressService addressService;
+    private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AgentService(AgentRepository agentRepository,
                         AddressService addressService,
+                        AddressRepository addressRepository,
                         PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
         this.addressService = addressService;
+        this.addressRepository = addressRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -66,6 +71,33 @@ public class AgentService {
 
         // 6. Return both agent and plain password
         return new AgentCreationResponse(savedAgent, plainPassword);
+    }
+
+    public AgentDetailResponse getAgentById(String agentId) {
+        // 1. ค้นหา Agent
+        Agent agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent not found with id: " + agentId));
+
+        // 2. ค้นหา Address
+        Address address = addressRepository.findById(agent.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + agent.getAddressId()));
+
+        // 3. Build response
+        return AgentDetailResponse.builder()
+                .id(agent.getId())
+                .firstname(agent.getFirstname())
+                .lastname(agent.getLastname())
+                .email(agent.getEmail())
+                .status(agent.getStatus())
+                .address(AgentDetailResponse.AddressResponse.builder()
+                        .id(address.getId())
+                        .addrDetailTh(address.getAddrDetailTh())
+                        .subDistrictTh(address.getSubDistrictTh())
+                        .districtTh(address.getDistrictTh())
+                        .provinceTh(address.getProvinceTh())
+                        .postalCode(address.getPostalCode())
+                        .build())
+                .build();
     }
 
     public AgentStatisticsResponse getStatistics() {
