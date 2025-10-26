@@ -200,5 +200,6 @@ $RECYCLE.BIN/
 docs/
 HELP.md
 CLAUDE.md
+PROMPT.md
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,java,visualstudiocode,jetbrains+all,dotenv

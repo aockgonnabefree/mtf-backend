@@ -12,6 +12,7 @@ public class AgentDetailResponse {
     private String lastname;
     private String email;
     private String status;
+    private String role;
 
     // Address info (Thai only)
     private AddressResponse address;

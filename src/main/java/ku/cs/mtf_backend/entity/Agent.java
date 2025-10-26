@@ -18,5 +18,6 @@ public class Agent {
     private String email;
     private String hashedPassword;
     private String status;
+    private String role;
     private String addressId;
 }

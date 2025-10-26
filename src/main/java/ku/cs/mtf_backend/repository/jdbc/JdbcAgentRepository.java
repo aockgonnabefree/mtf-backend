@@ -37,10 +37,17 @@ public class JdbcAgentRepository implements AgentRepository {
     }
 
     @Override
+    public boolean existsByRole(String role) {
+        String sql = "SELECT COUNT(*) FROM AGENT WHERE Role = CAST(:role AS agent_role)";
+        Integer count = jdbcClient.sql(sql).param("role", role).query(Integer.class).single();
+        return count > 0;
+    }
+
+    @Override
     public Agent save(Agent agent) {
         String sql = """
-            INSERT INTO AGENT (Id, Firstname, Lastname, Email, Hashed_password, Status, Address_id)
-            VALUES (:id, :firstname, :lastname, :email, :hashedPassword, CAST(:status AS active_status_type), :addressId)
+            INSERT INTO AGENT (Id, Firstname, Lastname, Email, Hashed_password, Status, Role, Address_id)
+            VALUES (:id, :firstname, :lastname, :email, :hashedPassword, CAST(:status AS active_status_type), CAST(:role AS agent_role), :addressId)
             """;
 
         jdbcClient.sql(sql)
@@ -50,6 +57,7 @@ public class JdbcAgentRepository implements AgentRepository {
                 .param("email", agent.getEmail())
                 .param("hashedPassword", agent.getHashedPassword())
                 .param("status", agent.getStatus())
+                .param("role", agent.getRole())
                 .param("addressId", agent.getAddressId())
                 .update();
 
@@ -64,6 +72,7 @@ public class JdbcAgentRepository implements AgentRepository {
                 Lastname = :lastname,
                 Email = :email,
                 Status = CAST(:status AS active_status_type),
+                Role = CAST(:role AS agent_role),
                 Address_id = :addressId
             WHERE Id = :id
             """;
@@ -74,6 +83,7 @@ public class JdbcAgentRepository implements AgentRepository {
                 .param("lastname", agent.getLastname())
                 .param("email", agent.getEmail())
                 .param("status", agent.getStatus())
+                .param("role", agent.getRole())
                 .param("addressId", agent.getAddressId())
                 .update();
 
@@ -108,13 +118,13 @@ public class JdbcAgentRepository implements AgentRepository {
 
     @Override
     public long countAll() {
-        String sql = "SELECT COUNT(*) FROM AGENT";
+        String sql = "SELECT COUNT(*) FROM AGENT WHERE Role = CAST('AGENT' AS agent_role)";
         return jdbcClient.sql(sql).query(Long.class).single();
     }
 
     @Override
     public long countByStatus(String status) {
-        String sql = "SELECT COUNT(*) FROM AGENT WHERE Status = CAST(:status AS active_status_type)";
+        String sql = "SELECT COUNT(*) FROM AGENT WHERE Role = CAST('AGENT' AS agent_role) AND Status = CAST(:status AS active_status_type)";
         return jdbcClient.sql(sql)
                 .param("status", status)
                 .query(Long.class)
@@ -129,9 +139,10 @@ public class JdbcAgentRepository implements AgentRepository {
                 Id as id,
                 CONCAT(Firstname, ' ', Lastname) as fullName,
                 Email as email,
-                Status as status
+                Status as status,
+                Role as role
             FROM AGENT
-            WHERE 1=1
+            WHERE Role = CAST('AGENT' AS agent_role)
             """);
 
         if (fullName != null && !fullName.isBlank()) {
@@ -162,7 +173,7 @@ public class JdbcAgentRepository implements AgentRepository {
     public long countWithFilters(String fullName, String status) {
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*) FROM AGENT
-            WHERE 1=1
+            WHERE Role = CAST('AGENT' AS agent_role)
             """);
 
         if (fullName != null && !fullName.isBlank()) {
@@ -189,7 +200,8 @@ public class JdbcAgentRepository implements AgentRepository {
                 rs.getString("id"),
                 rs.getString("fullName"),
                 rs.getString("email"),
-                rs.getString("status")
+                rs.getString("status"),
+                rs.getString("role")
         );
     }
 }

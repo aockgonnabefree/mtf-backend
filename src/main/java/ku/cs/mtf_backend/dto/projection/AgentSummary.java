@@ -12,4 +12,5 @@ public class AgentSummary {
     private String fullName;
     private String email;
     private String status;
+    private String role;
 }

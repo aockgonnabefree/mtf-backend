@@ -51,9 +51,11 @@ ku/cs/mtf_backend/dto/response/PageResponse$PageResponseBuilder.class
 ku/cs/mtf_backend/repository/WorkDetailRepository.class
 ku/cs/mtf_backend/repository/EmployerRepository.class
 ku/cs/mtf_backend/controller/AgentController.class
+ku/cs/mtf_backend/dto/request/CreateAdminPayload.class
 ku/cs/mtf_backend/dto/response/EmploymentContractResponse$EmploymentContractResponseBuilder.class
 ku/cs/mtf_backend/dto/request/CreateEmploymentContractPayload.class
 ku/cs/mtf_backend/dto/response/Wp46HistoryDTO.class
+ku/cs/mtf_backend/dto/response/AdminCreationResponse.class
 ku/cs/mtf_backend/dto/response/EmployeeAvailabilityDTO.class
 ku/cs/mtf_backend/dto/response/Wp46Response.class
 ku/cs/mtf_backend/security/SecurityConfig.class
@@ -67,10 +69,13 @@ ku/cs/mtf_backend/service/EmployeeService.class
 ku/cs/mtf_backend/dto/response/BillDetailResponse$EmployeeInfo$EmployeeInfoBuilder.class
 ku/cs/mtf_backend/dto/response/EmployeeDetailResponse$CurrentEmployerResponse.class
 ku/cs/mtf_backend/dto/projection/EmployerSummary.class
+ku/cs/mtf_backend/service/AgentUserDetailsService.class
 ku/cs/mtf_backend/entity/Work$WorkBuilder.class
 ku/cs/mtf_backend/dto/response/EmployerDetailResponse$AddressResponse$AddressResponseBuilder.class
 ku/cs/mtf_backend/dto/response/BillDetailResponse$WorkInfo.class
+ku/cs/mtf_backend/service/JwtService.class
 ku/cs/mtf_backend/repository/jdbc/JdbcDocumentRepository.class
+ku/cs/mtf_backend/dto/response/LoginResponse.class
 ku/cs/mtf_backend/dto/response/Wp46Response$Wp46ResponseBuilder.class
 ku/cs/mtf_backend/repository/jdbc/JdbcWp46Repository.class
 ku/cs/mtf_backend/dto/response/EmployerStatisticsResponse$EmployerStatisticsResponseBuilder.class
@@ -81,6 +86,7 @@ ku/cs/mtf_backend/dto/request/CreateWp46Payload.class
 ku/cs/mtf_backend/dto/response/BillDetailResponse$EmployerInfo.class
 ku/cs/mtf_backend/dto/response/EmploymentContractHistoryDTO$EmploymentContractHistoryDTOBuilder.class
 ku/cs/mtf_backend/dto/response/EmployerStatisticsResponse.class
+ku/cs/mtf_backend/security/JwtAuthenticationFilter.class
 ku/cs/mtf_backend/entity/Employee$EmployeeBuilder.class
 ku/cs/mtf_backend/repository/jdbc/JdbcWorkDetailRepository$1.class
 ku/cs/mtf_backend/entity/Wp46.class
@@ -98,11 +104,13 @@ ku/cs/mtf_backend/entity/Employment.class
 ku/cs/mtf_backend/dto/response/EmployerSummaryDTO.class
 ku/cs/mtf_backend/dto/response/BillDetailResponse.class
 ku/cs/mtf_backend/dto/response/AgentStatisticsResponse.class
+ku/cs/mtf_backend/dto/request/LoginRequest.class
 ku/cs/mtf_backend/dto/response/EmployeeDetailResponse$AddressResponse.class
 ku/cs/mtf_backend/repository/EmploymentRepository.class
 ku/cs/mtf_backend/repository/jdbc/JdbcEmployerRepository.class
 ku/cs/mtf_backend/dto/response/WorkDetailResponse$AgentSummary$AgentSummaryBuilder.class
 ku/cs/mtf_backend/dto/response/WorkDetailResponse$EmployerSummary$EmployerSummaryBuilder.class
+ku/cs/mtf_backend/controller/AuthController.class
 ku/cs/mtf_backend/entity/Employment$EmploymentBuilder.class
 ku/cs/mtf_backend/MtfBackendApplication.class
 ku/cs/mtf_backend/service/DocumentService.class

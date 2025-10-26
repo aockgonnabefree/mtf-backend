@@ -63,6 +63,7 @@ public class AgentService {
                 .email(payload.getEmail())
                 .hashedPassword(hashedPassword)
                 .status(payload.getStatus())
+                .role("AGENT") // Automatically set role to AGENT for agent creation
                 .addressId(address.getId())
                 .build();
 
@@ -89,6 +90,7 @@ public class AgentService {
                 .lastname(agent.getLastname())
                 .email(agent.getEmail())
                 .status(agent.getStatus())
+                .role(agent.getRole())
                 .address(AgentDetailResponse.AddressResponse.builder()
                         .id(address.getId())
                         .addrDetailTh(address.getAddrDetailTh())
@@ -151,7 +153,7 @@ public class AgentService {
         // 3. Handle address update
         Address address = addressService.findOrCreateAddress(payload.getAddress());
 
-        // 4. Build updated agent (keep password unchanged)
+        // 4. Build updated agent (keep password unchanged, role unchanged)
         Agent updatedAgent = Agent.builder()
                 .id(agentId)
                 .firstname(payload.getFirstName())
@@ -159,6 +161,7 @@ public class AgentService {
                 .email(payload.getEmail())
                 .hashedPassword(existingAgent.getHashedPassword()) // Keep existing password
                 .status(payload.getStatus())
+                .role(existingAgent.getRole()) // Keep existing role (cannot be changed through update)
                 .addressId(address.getId())
                 .build();
 

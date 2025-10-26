@@ -7,12 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class CreateAgentPayload {
-
-    @NotBlank(message = "ID is required")
-    @Size(min = 13, max = 13, message = "ID must be 13 digits")
-    @Pattern(regexp = "^[0-9]*$", message = "ID must contain only digits")
-    private String id;
+public class CreateAdminPayload {
 
     @NotBlank(message = "First name is required")
     private String firstName;
@@ -24,19 +19,17 @@ public class CreateAgentPayload {
     @Email(message = "Email should be valid")
     private String email;
 
-    @NotBlank(message = "Status is required")
-    @Pattern(regexp = "ACTIVE|INACTIVE", message = "Status must be 'ACTIVE' or 'INACTIVE'")
-    private String status;
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]",
+             message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character")
+    private String password;
 
     @NotNull(message = "Address is required")
     @Valid
     private CreateAddressPayload address;
 
     // Setters with strip()
-    public void setId(String id) {
-        this.id = (id == null) ? null : id.strip();
-    }
-
     public void setFirstName(String firstName) {
         this.firstName = (firstName == null) ? null : firstName.strip();
     }
@@ -49,8 +42,7 @@ public class CreateAgentPayload {
         this.email = (email == null) ? null : email.strip();
     }
 
-    public void setStatus(String status) {
-        this.status = (status == null) ? null : status.strip();
+    public void setPassword(String password) {
+        this.password = (password == null) ? null : password.strip();
     }
-
-  }
+}

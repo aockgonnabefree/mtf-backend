@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface AgentRepository {
     boolean existsById(String id);
     boolean existsByEmail(String email);
+    boolean existsByRole(String role);
     Agent save(Agent agent);
     Agent update(Agent agent);
     Optional<Agent> findById(String id);

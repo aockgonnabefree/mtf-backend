@@ -27,6 +27,7 @@ public class UpdateAgentPayload {
     @Pattern(regexp = "ACTIVE|INACTIVE", message = "Status must be 'ACTIVE' or 'INACTIVE'")
     private String status;
 
+    
     @Valid
     private CreateAddressPayload address;
 
@@ -45,4 +46,5 @@ public class UpdateAgentPayload {
     public void setStatus(String status) {
         this.status = (status == null) ? null : status.strip();
     }
-}
+
+  }
