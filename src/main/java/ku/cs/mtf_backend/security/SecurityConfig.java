@@ -1,5 +1,6 @@
 package ku.cs.mtf_backend.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,12 +16,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000}")
+    private String corsAllowedOrigins;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -56,8 +61,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // อนุญาต origin ของ frontend
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        // อนุญาต origin ของ frontend (จาก environment variable)
+        List<String> allowedOrigins = Arrays.asList(corsAllowedOrigins.split(","));
+        configuration.setAllowedOrigins(allowedOrigins);
         // ถ้าต้องการอนุญาตทุก origin (เฉพาะตอน dev) ใช้
         // configuration.setAllowedOriginPatterns(List.of("*"));
 

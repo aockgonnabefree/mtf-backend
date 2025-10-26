@@ -17,10 +17,10 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:mtf-secret-key-must-be-at-least-256-bits-long-for-security-compliance}")
+    @Value("${JWT_SECRET:mtf-secret-key-must-be-at-least-256-bits-long-for-security-compliance}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${JWT_EXPIRATION:86400000}")
     private long expiration;
 
     private Key getSigningKey() {
