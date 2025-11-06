@@ -1,6 +1,9 @@
 package ku.cs.mtf_backend.controller;
 
 import ku.cs.mtf_backend.dto.projection.BillSummary;
+import ku.cs.mtf_backend.dto.request.PrintBillRequest;
+import ku.cs.mtf_backend.dto.response.BillPrintHistoryDTO;
+import ku.cs.mtf_backend.dto.response.BillPrintResponse;
 import ku.cs.mtf_backend.dto.response.BillStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
 import ku.cs.mtf_backend.entity.Bill;
@@ -110,6 +113,36 @@ public class BillController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{billId}/print")
+    public ResponseEntity<?> printBill(@PathVariable String billId,
+                                     @RequestBody PrintBillRequest request) {
+        try {
+            // Validate agentId
+            if (request == null || request.getAgentId() == null || request.getAgentId().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Agent ID is required"));
+            }
+
+            BillPrintResponse response = billService.printBill(billId, request.getAgentId(), request);
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to print bill: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{billId}/print-history")
+    public ResponseEntity<?> getPrintHistory(@PathVariable String billId) {
+        try {
+            List<BillPrintHistoryDTO> history = billService.getPrintHistory(billId);
+            return ResponseEntity.ok(Map.of("printHistory", history));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to get print history: " + e.getMessage()));
         }
     }
 }

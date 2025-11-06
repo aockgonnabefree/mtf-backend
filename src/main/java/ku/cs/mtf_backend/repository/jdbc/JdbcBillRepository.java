@@ -25,8 +25,10 @@ public class JdbcBillRepository implements BillRepository {
     @Override
     public Bill save(Bill bill) {
         String sql = """
-            INSERT INTO BILL (Id, Step_index, Step_name, Price, Status, Created_at, Paid_at, Work_id)
-            VALUES (:id, :stepIndex, :stepName, :price, CAST(:status AS bill_status), :createdAt, :paidAt, :workId)
+            INSERT INTO BILL (Id, Step_index, Step_name, Price, Status, Created_at, Paid_at, Work_id,
+                            PRINT_COUNT, LAST_PRINTED_AT, PRINT_STATUS)
+            VALUES (:id, :stepIndex, :stepName, :price, CAST(:status AS bill_status), :createdAt, :paidAt, :workId,
+                    :printCount, :lastPrintedAt, CAST(:printStatus AS bill_print_status))
             """;
 
         jdbcClient.sql(sql)
@@ -38,6 +40,9 @@ public class JdbcBillRepository implements BillRepository {
                 .param("createdAt", bill.getCreatedAt())
                 .param("paidAt", bill.getPaidAt())
                 .param("workId", bill.getWorkId())
+                .param("printCount", bill.getPrintCount())
+                .param("lastPrintedAt", bill.getLastPrintedAt())
+                .param("printStatus", bill.getPrintStatus())
                 .update();
 
         return bill;
@@ -105,7 +110,10 @@ public class JdbcBillRepository implements BillRepository {
                 Status = CAST(:status AS bill_status),
                 Created_at = :createdAt,
                 Paid_at = :paidAt,
-                Work_id = :workId
+                Work_id = :workId,
+                PRINT_COUNT = :printCount,
+                LAST_PRINTED_AT = :lastPrintedAt,
+                PRINT_STATUS = CAST(:printStatus AS bill_print_status)
             WHERE Id = :id
             """;
 
@@ -118,6 +126,9 @@ public class JdbcBillRepository implements BillRepository {
                 .param("createdAt", bill.getCreatedAt())
                 .param("paidAt", bill.getPaidAt())
                 .param("workId", bill.getWorkId())
+                .param("printCount", bill.getPrintCount())
+                .param("lastPrintedAt", bill.getLastPrintedAt())
+                .param("printStatus", bill.getPrintStatus())
                 .update();
 
         if (updated == 0) {
@@ -246,6 +257,9 @@ public class JdbcBillRepository implements BillRepository {
                 .createdAt(rs.getTimestamp("Created_at") != null ? rs.getTimestamp("Created_at").toLocalDateTime() : null)
                 .paidAt(rs.getTimestamp("Paid_at") != null ? rs.getTimestamp("Paid_at").toLocalDateTime() : null)
                 .workId(rs.getString("Work_id"))
+                .printCount((Integer) rs.getObject("PRINT_COUNT"))
+                .lastPrintedAt(rs.getTimestamp("LAST_PRINTED_AT") != null ? rs.getTimestamp("LAST_PRINTED_AT").toLocalDateTime() : null)
+                .printStatus(rs.getString("PRINT_STATUS"))
                 .build();
     }
 }

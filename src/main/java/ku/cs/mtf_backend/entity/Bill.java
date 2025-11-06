@@ -23,4 +23,9 @@ public class Bill {
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
     private String workId;
+
+    // Print tracking fields
+    private Integer printCount;
+    private LocalDateTime lastPrintedAt;
+    private String printStatus;
 }

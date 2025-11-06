@@ -1,25 +1,39 @@
 package ku.cs.mtf_backend.service;
 
 import ku.cs.mtf_backend.dto.projection.BillSummary;
+import ku.cs.mtf_backend.dto.request.PrintBillRequest;
+import ku.cs.mtf_backend.dto.response.BillPrintHistoryDTO;
+import ku.cs.mtf_backend.dto.response.BillPrintResponse;
 import ku.cs.mtf_backend.dto.response.BillStatisticsResponse;
 import ku.cs.mtf_backend.dto.response.PageResponse;
+import ku.cs.mtf_backend.entity.Agent;
 import ku.cs.mtf_backend.entity.Bill;
+import ku.cs.mtf_backend.entity.BillPrintHistory;
 import ku.cs.mtf_backend.exception.ResourceNotFoundException;
+import ku.cs.mtf_backend.repository.AgentRepository;
+import ku.cs.mtf_backend.repository.BillPrintHistoryRepository;
 import ku.cs.mtf_backend.repository.BillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class BillService {
 
     private final BillRepository billRepository;
+    private final BillPrintHistoryRepository billPrintHistoryRepository;
+    private final AgentRepository agentRepository;
 
     @Autowired
-    public BillService(BillRepository billRepository) {
+    public BillService(BillRepository billRepository,
+                      BillPrintHistoryRepository billPrintHistoryRepository,
+                      AgentRepository agentRepository) {
         this.billRepository = billRepository;
+        this.billPrintHistoryRepository = billPrintHistoryRepository;
+        this.agentRepository = agentRepository;
     }
 
     public Bill getBillById(String billId) {
@@ -53,9 +67,88 @@ public class BillService {
                 .createdAt(bill.getCreatedAt())
                 .paidAt(LocalDateTime.now())
                 .workId(bill.getWorkId())
+                .printCount(bill.getPrintCount())
+                .lastPrintedAt(bill.getLastPrintedAt())
+                .printStatus(bill.getPrintStatus())
                 .build();
 
         return billRepository.update(updatedBill);
+    }
+
+    public BillPrintResponse printBill(String billId, String agentId, PrintBillRequest request) {
+        // 1. ตรวจสอบว่า bill มีอยู่จริง
+        Bill bill = getBillById(billId);
+
+        // 2. ตรวจสอบว่า agent มีอยู่จริง
+        Agent agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent not found with ID: " + agentId));
+
+        // 3. นับจำนวนครั้งที่พิมพ์แล้ว
+        int currentPrintCount = billPrintHistoryRepository.countByBillId(billId);
+        int newPrintRound = currentPrintCount + 1;
+
+        // 4. สร้างประวัติการพิมพ์
+        BillPrintHistory printHistory = BillPrintHistory.builder()
+                .id(UUID.randomUUID().toString())
+                .billId(billId)
+                .printRound(newPrintRound)
+                .printedAt(LocalDateTime.now())
+                .printedByAgentId(agentId)
+                .printReason(request != null ? request.getReason() : null)
+                .build();
+
+        billPrintHistoryRepository.save(printHistory);
+
+        // 5. อัพเดท bill ใหม่
+        String newPrintStatus = newPrintRound == 1 ? "PRINTED" : "REPRINTED";
+        Bill updatedBill = Bill.builder()
+                .id(bill.getId())
+                .stepIndex(bill.getStepIndex())
+                .stepName(bill.getStepName())
+                .price(bill.getPrice())
+                .status(bill.getStatus())
+                .createdAt(bill.getCreatedAt())
+                .paidAt(bill.getPaidAt())
+                .workId(bill.getWorkId())
+                .printCount(newPrintRound)
+                .lastPrintedAt(printHistory.getPrintedAt())
+                .printStatus(newPrintStatus)
+                .build();
+
+        billRepository.update(updatedBill);
+
+        // 6. Return response
+        return BillPrintResponse.builder()
+                .bill(updatedBill)
+                .printRound(newPrintRound)
+                .printedAt(printHistory.getPrintedAt())
+                .printedByAgentName(agent.getFirstname() + " " + agent.getLastname())
+                .printReason(printHistory.getPrintReason())
+                .build();
+    }
+
+    public List<BillPrintHistoryDTO> getPrintHistory(String billId) {
+        // 1. ตรวจสอบว่า bill มีอยู่จริง
+        getBillById(billId);
+
+        // 2. ดึงประวัติการพิมพ์ทั้งหมด
+        List<BillPrintHistory> printHistoryList = billPrintHistoryRepository.findAllByBillIdOrderByPrintRoundDesc(billId);
+
+        // 3. แปลงเป็น DTO พร้อมชื่อ agent
+        return printHistoryList.stream()
+                .map(history -> {
+                    Agent agent = agentRepository.findById(history.getPrintedByAgentId())
+                            .orElse(null);
+                    String agentName = agent != null ? agent.getFirstname() + " " + agent.getLastname() : "Unknown Agent";
+
+                    return BillPrintHistoryDTO.builder()
+                            .printRound(history.getPrintRound())
+                            .printedAt(history.getPrintedAt())
+                            .printedByAgentName(agentName)
+                            .printReason(history.getPrintReason())
+                            .build();
+                })
+                .toList();
     }
 
     public BillStatisticsResponse getStatistics() {
